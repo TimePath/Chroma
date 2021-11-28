@@ -34,19 +34,17 @@ jobs:
       - name: Setup
         run: |
           export PATH=${GITHUB_WORKSPACE}/tools/x86_64-elf-tools/bin:$PATH
-          chmod +x "${GITHUB_WORKSPACE}/pre.sh"
-          ./pre.sh
+          cmake -G"Unix Makefiles" -S. -Bcmake-build-debug -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build
         run: |
           export PATH=${GITHUB_WORKSPACE}/tools/x86_64-elf-tools/bin:$PATH
-          make kernel
+          cmake --build cmake-build-debug --target kernel
 
       - name: Make img
         run: |
-          mkdir -p bin/img
-          chmod +x "${GITHUB_WORKSPACE}/tools/mkbootimg/mkbootimg"
-          ./tools/mkbootimg/mkbootimg chroma.json bin/img/chroma.img
+          export PATH=${GITHUB_WORKSPACE}/tools/x86_64-elf-tools/bin:$PATH
+          cmake --build cmake-build-debug --target chroma.img
 
       - uses: actions/upload-artifact@v2
         with:

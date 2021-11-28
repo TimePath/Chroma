@@ -9,12 +9,14 @@ Makefile
 CMakeFiles
 CMakeCache.txt
 .idea/
+/cmake-build-*
 
 cmake_install.cmake
 
 temp/
 /bin/
 /img/boot/exe
+/img/loader/
 tools/x86_64-elf-tools
 
 

@@ -11,6 +11,9 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_CROSSCOMPILING 1)
 
+include(FetchContent)
+set(FETCHCONTENT_QUIET false)
+
 project(chroma)
 
 SET(src_files
@@ -70,3 +73,57 @@ add_executable(kernel)
 target_sources(kernel PUBLIC ${src_preamble} PUBLIC ${src_files} PUBLIC ${src_no_sse} PUBLIC ${lib_files} PUBLIC ${src_epilogue})
 target_compile_options(kernel PRIVATE -ffreestanding -O0 -Wall -Wextra -Wall -Werror -fPIC -fno-exceptions -fno-omit-frame-pointer -mno-red-zone -fno-stack-protector -ggdb3)
 target_link_options(kernel PRIVATE -T ${CMAKE_SOURCE_DIR}/linker.ld -ffreestanding -O2 -nostdlib -nostartfiles -lgcc)
+
+add_custom_command(
+        COMMENT "Generating src/assets/font.o"
+        OUTPUT "${CMAKE_SOURCE_DIR}/src/assets/font.o"
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/assets/font.psf"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMAND x86_64-elf-ld -r -b binary -o "src/assets/font.o" "src/assets/font.psf"
+)
+
+set(_bootboot "${CMAKE_BINARY_DIR}/_deps/bootboot")
+FetchContent_Declare(
+        bootboot
+        SOURCE_DIR "${_bootboot}"
+        GIT_PROGRESS true
+        GIT_REPOSITORY "https://gitlab.com/bztsrc/bootboot.git"
+        GIT_TAG "master"
+        GIT_SHALLOW true
+)
+FetchContent_MakeAvailable(bootboot)
+set(_mkbootimg_makefile "${_bootboot}/mkbootimg/Makefile")
+file(READ "${_mkbootimg_makefile}" _mkbootimg_makefile_text)
+string(REGEX REPLACE "@zip" "#@zip" _mkbootimg_makefile_text "${_mkbootimg_makefile_text}")
+file(WRITE "${_mkbootimg_makefile}" "${_mkbootimg_makefile_text}")
+
+set(_mkbootimg "${CMAKE_BINARY_DIR}/bin/mkbootimg${CMAKE_EXECUTABLE_SUFFIX}")
+add_custom_command(
+        COMMENT "Generating mkbootimg${CMAKE_EXECUTABLE_SUFFIX}"
+        OUTPUT "${_mkbootimg}"
+        WORKING_DIRECTORY "${_bootboot}/mkbootimg"
+        COMMAND make all
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "mkbootimg${CMAKE_EXECUTABLE_SUFFIX}" "${_mkbootimg}"
+)
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/img/loader")
+add_custom_command(
+        COMMENT "Generating img/loader/bootloader"
+        OUTPUT "${CMAKE_SOURCE_DIR}/img/loader/bootloader"
+        DEPENDS "${CMAKE_SOURCE_DIR}/bin/kernel"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_bootboot}/dist/boot.bin" "${CMAKE_SOURCE_DIR}/img/loader/bootloader"
+)
+add_custom_command(
+        COMMENT "Generating img/boot/exe"
+        OUTPUT "${CMAKE_SOURCE_DIR}/img/boot/exe"
+        DEPENDS "${CMAKE_SOURCE_DIR}/bin/kernel"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_SOURCE_DIR}/bin/kernel" "${CMAKE_SOURCE_DIR}/img/boot/exe"
+)
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/img")
+add_custom_command(
+        COMMENT "Generating bin/img/chroma.img"
+        OUTPUT "${CMAKE_SOURCE_DIR}/bin/img/chroma.img"
+        DEPENDS "${_mkbootimg}" "${CMAKE_SOURCE_DIR}/img/loader/bootloader" "${CMAKE_SOURCE_DIR}/img/boot/exe"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMAND "${_mkbootimg}" "${CMAKE_SOURCE_DIR}/chroma.json" "${CMAKE_SOURCE_DIR}/bin/img/chroma.img"
+)
+add_custom_target(chroma.img DEPENDS "${CMAKE_SOURCE_DIR}/bin/img/chroma.img")
