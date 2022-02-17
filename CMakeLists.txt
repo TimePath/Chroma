@@ -1,5 +1,6 @@
 #project config
 cmake_minimum_required(VERSION 3.10)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 SET(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
@@ -15,6 +16,9 @@ include(FetchContent)
 set(FETCHCONTENT_QUIET false)
 
 project(chroma)
+enable_language(ASM-NASM)
+enable_language(C)
+enable_language(CXX)
 
 SET(src_files
         ${CMAKE_SOURCE_DIR}/src/kernel.cpp
@@ -22,6 +26,7 @@ SET(src_files
         ${CMAKE_SOURCE_DIR}/src/video/print.cpp
         ${CMAKE_SOURCE_DIR}/src/system/cpu.cpp
         ${CMAKE_SOURCE_DIR}/src/system/core.cpp
+        ${CMAKE_SOURCE_DIR}/src/global/core.s
         ${CMAKE_SOURCE_DIR}/src/system/rw.cpp
         ${CMAKE_SOURCE_DIR}/src/system/serial.cpp
         ${CMAKE_SOURCE_DIR}/src/system/pci.cpp
@@ -73,7 +78,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 add_executable(kernel)
 
 target_sources(kernel PUBLIC ${src_preamble} PUBLIC ${src_files} PUBLIC ${src_no_sse} PUBLIC ${lib_files} PUBLIC ${src_epilogue})
-target_compile_options(kernel PRIVATE -ffreestanding -O0 -Wall -Wextra -Wall -Werror -fPIC -fno-exceptions -fno-omit-frame-pointer -mno-red-zone -fno-stack-protector -fno-rtti -ggdb3)
+target_compile_options(kernel PRIVATE -ffreestanding -O0 -Wall -Wextra -Wall -Werror -fPIC -fno-exceptions -fno-omit-frame-pointer -mno-red-zone -fno-stack-protector $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti> -ggdb3)
 target_link_options(kernel PRIVATE -T ${CMAKE_SOURCE_DIR}/linker.ld -ffreestanding -O2 -nostdlib -nostartfiles -lgcc)
 
 add_custom_command(

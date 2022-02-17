@@ -17,8 +17,8 @@ BASE equ 0x1000
 global stack
 extern initcpu
 
-extern coreidt
-extern coregdt
+; extern coreidt
+; extern coregdt
 
 global startCore
 startCore:
@@ -78,8 +78,8 @@ startCore64:
     mov fs, ax
     mov gs, ax
 
-    lgdt [coregdt]
-    lidt [coreidt]
+    ; lgdt [coregdt]
+    ; lidt [coreidt]
 
     mov rbp, 0
     push 0
