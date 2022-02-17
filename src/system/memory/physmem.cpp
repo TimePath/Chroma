@@ -1,6 +1,9 @@
 #include <kernel/chroma.h>
 #include <lainlib/lainlib.h>
 
+#include <atomic>
+#define _Atomic(T) std::atomic<T>
+
 
 /************************
  *** Team Kitty, 2020 ***

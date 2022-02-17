@@ -35,7 +35,7 @@ SET(src_files
         ${CMAKE_SOURCE_DIR}/src/system/memory/paging.cpp
         ${CMAKE_SOURCE_DIR}/src/system/memory/abstract_allocator.cpp
         ${CMAKE_SOURCE_DIR}/src/system/memory/liballoc.cpp
-        ${CMAKE_SOURCE_DIR}/src/system/memory/physmem.c
+        ${CMAKE_SOURCE_DIR}/src/system/memory/physmem.cpp
         ${CMAKE_SOURCE_DIR}/src/system/process/process.cpp
         ${CMAKE_SOURCE_DIR}/src/drivers/elf.cpp
         ${CMAKE_SOURCE_DIR}/src/drivers/devices/devices.cpp
