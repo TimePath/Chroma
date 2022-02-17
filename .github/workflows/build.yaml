@@ -29,7 +29,10 @@ jobs:
           unzip x86_64-elf-tools-linux.zip
           export PATH=${GITHUB_WORKSPACE}/tools/x86_64-elf-tools/bin:$PATH
 
-
+      - name: Install NASM
+        id: nasm
+        run: |
+          sudo apt-get install -y nasm
 
       - name: Setup
         run: |
